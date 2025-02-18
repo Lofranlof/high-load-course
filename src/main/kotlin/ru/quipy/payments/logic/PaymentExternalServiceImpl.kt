@@ -38,6 +38,7 @@ class PaymentExternalSystemAdapterImpl(
         .callTimeout(Duration.ofMillis(1300L))
         .build()
 
+
     override fun performPaymentAsync(paymentId: UUID, amount: Int, paymentStartedAt: Long, deadline: Long) {
         logger.warn("[$accountName] Submitting payment request for payment $paymentId")
         val transactionId = UUID.randomUUID()
@@ -53,10 +54,22 @@ class PaymentExternalSystemAdapterImpl(
             post(emptyBody)
         }.build()
 
+<<<<<<< HEAD
         val maxRetries = 4
         var attempt = 1
         var retryDelay = 200L
         var accumDelay = 0L
+=======
+        try {
+            rateLimiter.tickBlocking()
+            client.newCall(request).execute().use { response ->
+                val body = try {
+                    mapper.readValue(response.body?.string(), ExternalSysResponse::class.java)
+                } catch (e: Exception) {
+                    logger.error("[$accountName] [ERROR] Payment processed for txId: $transactionId, payment: $paymentId, result code: ${response.code}, reason: ${response.body?.string()}")
+                    ExternalSysResponse(transactionId.toString(), paymentId.toString(),false, e.message)
+                }
+>>>>>>> 73417f6 (solved 1st case)
 
         while (attempt <= maxRetries) {
             semaphore.acquire()
