@@ -12,6 +12,7 @@ import ru.quipy.payments.api.PaymentAggregate
 import java.net.SocketTimeoutException
 import java.time.Duration
 import java.util.*
+import java.util.concurrent.Semaphore
 
 
 // Advice: always treat time as a Duration
@@ -22,9 +23,9 @@ class PaymentExternalSystemAdapterImpl(
 
     companion object {
         val logger = LoggerFactory.getLogger(PaymentExternalSystemAdapter::class.java)
-
         val emptyBody = RequestBody.create(null, ByteArray(0))
         val mapper = ObjectMapper().registerKotlinModule()
+        val semaphore = Semaphore(5) // HARDCODED VALUE!!!
     }
 
     private val serviceName = properties.serviceName
@@ -52,6 +53,7 @@ class PaymentExternalSystemAdapterImpl(
             post(emptyBody)
         }.build()
 
+        semaphore.acquire()
         try {
             rateLimiter.tickBlocking()
             client.newCall(request).execute().use { response ->
@@ -87,6 +89,8 @@ class PaymentExternalSystemAdapterImpl(
                     }
                 }
             }
+        } finally {
+            semaphore.release()
         }
     }
 
