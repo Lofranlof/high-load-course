@@ -14,7 +14,12 @@ import ru.quipy.payments.api.PaymentAggregate
 import java.net.SocketTimeoutException
 import java.time.Duration
 import java.util.*
+<<<<<<< HEAD
 import java.util.concurrent.*
+=======
+import java.util.concurrent.Semaphore
+
+>>>>>>> abc25a3 (solved case 2)
 
 // Advice: always treat time as a Duration
 class PaymentExternalSystemAdapterImpl(
@@ -55,11 +60,15 @@ class PaymentExternalSystemAdapterImpl(
         }.build()
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         val maxRetries = 4
         var attempt = 1
         var retryDelay = 200L
         var accumDelay = 0L
 =======
+=======
+        semaphore.acquire()
+>>>>>>> abc25a3 (solved case 2)
         try {
             rateLimiter.tickBlocking()
             client.newCall(request).execute().use { response ->
@@ -114,6 +123,7 @@ class PaymentExternalSystemAdapterImpl(
             } finally {
                 semaphore.release()
             }
+<<<<<<< HEAD
             attempt++
             accumDelay += retryDelay
             if (attempt > maxRetries || accumDelay + requestAverageProcessingTime.toMillis() + 100L >= 3500L) break
@@ -123,6 +133,10 @@ class PaymentExternalSystemAdapterImpl(
 
         paymentESService.update(paymentId) {
             it.logProcessing(false, now(), transactionId, reason = "Retries exhausted.")
+=======
+        } finally {
+            semaphore.release()
+>>>>>>> abc25a3 (solved case 2)
         }
     }
 
