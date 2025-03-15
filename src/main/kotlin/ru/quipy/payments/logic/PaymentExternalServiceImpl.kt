@@ -31,6 +31,7 @@ class PaymentExternalSystemAdapterImpl(
         val emptyBody = RequestBody.create(null, ByteArray(0))
         val mapper = ObjectMapper().registerKotlinModule()
         val semaphore = Semaphore(50, true)
+
     }
 
     private val serviceName = properties.serviceName
@@ -61,10 +62,14 @@ class PaymentExternalSystemAdapterImpl(
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 622e5bf (solved case 4)
         val maxRetries = 4
         var attempt = 1
         var retryDelay = 200L
         var accumDelay = 0L
+<<<<<<< HEAD
 =======
 =======
         semaphore.acquire()
@@ -79,6 +84,8 @@ class PaymentExternalSystemAdapterImpl(
                     ExternalSysResponse(transactionId.toString(), paymentId.toString(),false, e.message)
                 }
 >>>>>>> 73417f6 (solved 1st case)
+=======
+>>>>>>> 622e5bf (solved case 4)
 
         while (attempt <= maxRetries) {
             semaphore.acquire()
@@ -124,6 +131,9 @@ class PaymentExternalSystemAdapterImpl(
                 semaphore.release()
             }
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 622e5bf (solved case 4)
             attempt++
             accumDelay += retryDelay
             if (attempt > maxRetries || accumDelay + requestAverageProcessingTime.toMillis() + 100L >= 3500L) break
@@ -133,10 +143,13 @@ class PaymentExternalSystemAdapterImpl(
 
         paymentESService.update(paymentId) {
             it.logProcessing(false, now(), transactionId, reason = "Retries exhausted.")
+<<<<<<< HEAD
 =======
         } finally {
             semaphore.release()
 >>>>>>> abc25a3 (solved case 2)
+=======
+>>>>>>> 622e5bf (solved case 4)
         }
     }
 
