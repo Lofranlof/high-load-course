@@ -31,8 +31,9 @@ class PaymentAccountsConfig {
     lateinit var paymentProviderHostPort: String
     private val allowedAccounts = setOf("acc-9")
 
+
     @Bean
-    fun accountAdapters(paymentService: EventSourcingService<UUID, PaymentAggregate, PaymentAggregateState>): List<PaymentExternalSystemAdapter> {
+    fun accountAdapters(paymentService: EventSourcingService<UUID, PaymentAggregate, PaymentAggregateState>, retryQueue: RetryQueue): List<PaymentExternalSystemAdapter> {
         val request = HttpRequest.newBuilder()
             .uri(URI("http://${paymentProviderHostPort}/external/accounts?serviceName=onlineStore")) // todo sukhoa service name
             .GET()
@@ -48,6 +49,6 @@ class PaymentAccountsConfig {
             .filter {
                 it.accountName in allowedAccounts
             }.onEach(::println)
-            .map { PaymentExternalSystemAdapterImpl(it, paymentService) }
+            .map { PaymentExternalSystemAdapterImpl(it, paymentService, retryQueue) }
     }
 }
