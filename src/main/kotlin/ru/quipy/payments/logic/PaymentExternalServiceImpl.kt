@@ -25,7 +25,7 @@ class PaymentExternalSystemAdapterImpl(
         val logger = LoggerFactory.getLogger(PaymentExternalSystemAdapter::class.java)
         val emptyBody = RequestBody.create(null, ByteArray(0))
         val mapper = ObjectMapper().registerKotlinModule()
-        val semaphore = Semaphore(50, true)
+        val semaphore = Semaphore(5, true)
     }
 
     private val serviceName = properties.serviceName
@@ -35,7 +35,7 @@ class PaymentExternalSystemAdapterImpl(
     private val parallelRequests = properties.parallelRequests
     private val rateLimiter = SlidingWindowRateLimiter(rate = rateLimitPerSec.toLong(), window = Duration.ofSeconds(1))
     private val client = OkHttpClient.Builder()
-        .callTimeout(Duration.ofMillis(1300L))
+        .callTimeout(Duration.ofMillis(1100L))
         .build()
 
     override fun performPaymentAsync(paymentId: UUID, amount: Int, paymentStartedAt: Long, deadline: Long) {
