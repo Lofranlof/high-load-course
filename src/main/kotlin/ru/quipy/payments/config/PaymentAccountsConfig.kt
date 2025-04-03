@@ -32,8 +32,6 @@ class PaymentAccountsConfig {
     private val allowedAccounts = setOf("acc-9")
 
 
-
-
     @Bean
     fun accountAdapters(paymentService: EventSourcingService<UUID, PaymentAggregate, PaymentAggregateState>, retryQueue: RetryQueue): List<PaymentExternalSystemAdapter> {
         val request = HttpRequest.newBuilder()
