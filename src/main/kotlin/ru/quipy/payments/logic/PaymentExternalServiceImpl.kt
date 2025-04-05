@@ -6,15 +6,16 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
+import ru.quipy.OnlineShopApplication
 import ru.quipy.common.utils.SlidingWindowRateLimiter
 import ru.quipy.core.EventSourcingService
 import ru.quipy.payments.api.PaymentAggregate
-import ru.quipy.OnlineShopApplication // Импортируем OnlineShopApplication для доступа к appExecutor
 import java.net.SocketTimeoutException
 import java.time.Duration
 import java.util.*
-import java.util.concurrent.*
-import kotlin.random.Random
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Semaphore
+import java.util.concurrent.TimeUnit
 
 // Advice: always treat time as a Duration
 class PaymentExternalSystemAdapterImpl(
@@ -25,7 +26,7 @@ class PaymentExternalSystemAdapterImpl(
         val logger = LoggerFactory.getLogger(PaymentExternalSystemAdapter::class.java)
         val emptyBody = RequestBody.create(null, ByteArray(0))
         val mapper = ObjectMapper().registerKotlinModule()
-        val semaphore = Semaphore(50)
+        val semaphore = Semaphore(20000, true)
         private val executorService: ExecutorService = OnlineShopApplication.appExecutor
     }
 
@@ -37,8 +38,11 @@ class PaymentExternalSystemAdapterImpl(
     private val rateLimiter = SlidingWindowRateLimiter(rate = rateLimitPerSec.toLong(), window = Duration.ofSeconds(1))
 
     private val client = OkHttpClient.Builder()
-        .callTimeout(1300L, TimeUnit.MILLISECONDS)
+//        .connectionPool(ConnectionPool(100, 5, TimeUnit.MINUTES))
+        .callTimeout(13000L, TimeUnit.MILLISECONDS)
         .build()
+
+//    private val newClient = HTTP2Client()
 
     override fun performPaymentAsync(paymentId: UUID, amount: Int, paymentStartedAt: Long, deadline: Long) {
         logger.warn("[$accountName] Submitting payment request for payment $paymentId")
@@ -64,6 +68,7 @@ class PaymentExternalSystemAdapterImpl(
                 semaphore.acquire()
                 try {
                     rateLimiter.tickBlocking()
+                    // client.newCall(request).execute().use
                     client.newCall(request).execute().use { response ->
                         if (response.isSuccessful) {
                             val body = try {
@@ -105,7 +110,7 @@ class PaymentExternalSystemAdapterImpl(
                 }
                 attempt++
                 accumDelay += retryDelay
-                if (attempt > maxRetries || accumDelay + requestAverageProcessingTime.toMillis() + 100L >= 10000L) break
+                if (attempt > maxRetries || accumDelay + requestAverageProcessingTime.toMillis() + 100L >= 50000L) break
                 Thread.sleep(retryDelay)
                 retryDelay *= 2
             }
